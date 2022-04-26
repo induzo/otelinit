@@ -5,7 +5,7 @@
 ########
 
 test:
-	go test ./... -race -cover
+	go test ./... -cover
 
 test-leak:
 	go test ./ -leak
