@@ -1,0 +1,7 @@
+map[string]grpc.ServiceInfo{}goos: linux
+goarch: amd64
+pkg: github.com/induzo/otelinit
+cpu: Intel(R) Core(TM) i7-7700 CPU @ 3.60GHz
+BenchmarkInitProvider-8   	   42102	     26218 ns/op	   48733 B/op	      57 allocs/op
+PASS
+ok  	github.com/induzo/otelinit	5.292s

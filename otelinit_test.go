@@ -5,14 +5,15 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"fmt"
+	"flag"
 	"io"
-	"log"
+	"os"
 	"testing"
 	"time"
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/sdk/resource"
+	"go.uber.org/goleak"
 )
 
 func TestInitProvider(t *testing.T) {
@@ -59,6 +60,7 @@ func TestInitProvider(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
+
 			buf := &bytes.Buffer{}
 			ctx := context.Background()
 
@@ -66,7 +68,7 @@ func TestInitProvider(t *testing.T) {
 			tt.options = append(tt.options, WithBatchSize(1))
 
 			sd, err := InitProvider(
-				ctx, "test",
+				ctx, tt.name,
 				tt.options...,
 			)
 			if (err != nil) != tt.wantErr {
@@ -76,11 +78,7 @@ func TestInitProvider(t *testing.T) {
 			}
 
 			if !tt.wantErr {
-				defer func() {
-					_ = sd()
-				}()
-
-				tracer := otel.Tracer("test-tracer")
+				tracer := otel.Tracer(tt.name)
 
 				// work begins
 				_, span := tracer.Start(ctx, "t")
@@ -93,54 +91,38 @@ func TestInitProvider(t *testing.T) {
 					t.Errorf("no traces")
 				}
 			}
+
+			if sd != nil {
+				_ = sd()
+			}
 		})
 	}
 }
 
-// Initialize a otel provider with a collector
-func Example_initProviderCollector() {
-	ctx := context.Background()
+func BenchmarkInitProvider(b *testing.B) {
+	for i := 0; i <= b.N; i++ {
+		sd, _ := InitProvider(
+			context.Background(), "bench",
+			WithWriterTraceExporter(io.Discard),
+		)
 
-	shutdown, err := InitProvider(
-		ctx,
-		"simple-gohttp",
-		WithGRPCTraceExporter(
-			ctx,
-			fmt.Sprintf("%s:%d", "127.0.0.1", 4317),
-		),
-	)
-	if err != nil {
-		log.Println("failed to initialize opentelemetry")
+		b.StopTimer()
 
-		return
+		_ = sd()
+
+		b.StartTimer()
 	}
-
-	defer func() {
-		if err := shutdown(); err != nil {
-			log.Println("failed to shutdown")
-		}
-	}()
 }
 
-// Initialize a otel provider and discard traces
-// useful for dev
-func Example_initProviderDiscardTraces() {
-	ctx := context.Background()
+func TestMain(m *testing.M) {
+	leak := flag.Bool("leak", false, "use leak detector")
+	flag.Parse()
 
-	shutdown, err := InitProvider(
-		ctx,
-		"simple-gohttp",
-		WithWriterTraceExporter(io.Discard),
-	)
-	if err != nil {
-		log.Println("failed to initialize opentelemetry")
+	if *leak {
+		goleak.VerifyTestMain(m)
 
 		return
 	}
 
-	defer func() {
-		if err := shutdown(); err != nil {
-			log.Println("failed to shutdown")
-		}
-	}()
+	os.Exit(m.Run())
 }

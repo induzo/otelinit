@@ -107,11 +107,15 @@ func TestProvider_init(t *testing.T) {
 				return
 			}
 
-			_, err = pvd.init(ctx)
+			sd, err := pvd.init(ctx)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("init() error = %v when expected err %t", err, tt.wantErr)
 
 				return
+			}
+
+			if sd != nil {
+				_ = sd()
 			}
 		})
 	}
