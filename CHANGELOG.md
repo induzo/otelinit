@@ -7,6 +7,11 @@ All notable changes to this project will be documented in this file.
 ### Documentation
 
 - Add changelog
+- Add examples
+
+### Features
+
+- Beautify repo
 
 ### Miscellaneous Tasks
 
