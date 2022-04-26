@@ -8,8 +8,10 @@ import (
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
 )
 
-func WithGRPCExporter(ctx context.Context, collectorTarget string) func(*Provider) error {
-	return func(pvd *Provider) error {
+// WithGRPCTraceExporter allows you to send your traces to the collector target
+// collectorTarget is the address of the collector, e.g. "127.0.0.1:4317"
+func WithGRPCTraceExporter(ctx context.Context, collectorTarget string) func(*provider) error {
+	return func(pvd *provider) error {
 		client := otlptracegrpc.NewClient(
 			otlptracegrpc.WithEndpoint(collectorTarget),
 			otlptracegrpc.WithInsecure(),

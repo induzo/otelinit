@@ -13,69 +13,63 @@ import (
 	semconv "go.opentelemetry.io/otel/semconv/v1.7.0"
 )
 
-// Provider is the provider for tracing.
-type Provider struct {
-	ctx                  context.Context
-	resource             *resource.Resource
-	traceExporter        sdktrace.SpanExporter
-	batchProcessorOption sdktrace.BatchSpanProcessorOption
-	traceProviderOption  sdktrace.TracerProviderOption
-	Shutdown             func() error
+// provider is the provider for tracing.
+type provider struct {
+	traceExporter         sdktrace.SpanExporter
+	resourceOptions       []resource.Option
+	batchProcessorOptions []sdktrace.BatchSpanProcessorOption
 }
 
 // NewProvider creates a new provider with default options.
-func NewProvider(
-	ctx context.Context,
+func newProvider(
 	serviceName string,
-	options ...func(*Provider) error,
-) (*Provider, error) {
-	res, err := resource.New(ctx,
-		resource.WithAttributes(
-			// the service name used to display traces in backends
-			semconv.ServiceNameKey.String(serviceName),
-		),
-	)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create resource: %w", err)
+	options ...func(*provider) error,
+) (*provider, error) {
+	pvd := &provider{
+		resourceOptions: []resource.Option{
+			resource.WithAttributes(
+				// the service name used to display traces in backends
+				semconv.ServiceNameKey.String(serviceName),
+			),
+		},
+		batchProcessorOptions: []sdktrace.BatchSpanProcessorOption{},
 	}
 
-	traceExporter, err := stdouttrace.New(stdouttrace.WithPrettyPrint())
-	if err != nil {
-		return nil, fmt.Errorf("creating stdout exporter: %w", err)
-	}
-
-	batchProcessorOption := sdktrace.WithMaxExportBatchSize(1)
-
-	traceProviderOption := sdktrace.WithSampler(sdktrace.ParentBased(sdktrace.AlwaysSample()))
-
-	pvd := &Provider{
-		ctx:                  ctx,
-		resource:             res,
-		traceExporter:        traceExporter,
-		batchProcessorOption: batchProcessorOption,
-		traceProviderOption:  traceProviderOption,
-		Shutdown:             nil,
-	}
-
-	// push options
+	// push options supplied as arguments
 	for _, option := range options {
 		if err := option(pvd); err != nil {
 			return nil, fmt.Errorf("failed to apply option: %w", err)
 		}
 	}
 
+	// Defaults
+	// trace exporter default
+	if pvd.traceExporter == nil {
+		// there should be no error possible, but just in case the lib change in the future
+		te, err := stdouttrace.New()
+		if err != nil {
+			return nil, fmt.Errorf("failed to apply option: %w", err)
+		}
+
+		pvd.traceExporter = te
+	}
+
 	return pvd, nil
 }
 
 // Init initializes the provider.
-func (pvd *Provider) Init() {
+func (pvd *provider) init(ctx context.Context) (func() error, error) {
+	res, err := resource.New(ctx, pvd.resourceOptions...)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create resource: %w", err)
+	}
+
 	// Register the trace exporter with a TracerProvider, using a batch
 	// span processor to aggregate spans before export.
-	bsp := sdktrace.NewBatchSpanProcessor(pvd.traceExporter, pvd.batchProcessorOption)
+	bsp := sdktrace.NewBatchSpanProcessor(pvd.traceExporter, pvd.batchProcessorOptions...)
 
 	tracerProvider := sdktrace.NewTracerProvider(
-		sdktrace.WithSampler(sdktrace.ParentBased(sdktrace.AlwaysSample())),
-		sdktrace.WithResource(pvd.resource),
+		sdktrace.WithResource(res),
 		sdktrace.WithSpanProcessor(bsp),
 	)
 
@@ -89,12 +83,12 @@ func (pvd *Provider) Init() {
 		),
 	)
 
-	pvd.Shutdown = func() error {
+	return func() error {
 		// Shutdown will flush any remaining spans and shut down the exporter.
-		if err := tracerProvider.Shutdown(pvd.ctx); err != nil {
+		if err := tracerProvider.Shutdown(ctx); err != nil {
 			return fmt.Errorf("failed to shutdown TracerProvider: %w", err)
 		}
 
 		return nil
-	}
+	}, nil
 }

@@ -9,6 +9,7 @@ require (
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.6.3
 	go.opentelemetry.io/otel/exporters/stdout/stdouttrace v1.6.3
 	go.opentelemetry.io/otel/sdk v1.6.3
+	google.golang.org/grpc v1.46.0
 )
 
 require (
@@ -24,6 +25,5 @@ require (
 	golang.org/x/sys v0.0.0-20220422013727-9388b58f7150 // indirect
 	golang.org/x/text v0.3.7 // indirect
 	google.golang.org/genproto v0.0.0-20220422154200-b37d22cd5731 // indirect
-	google.golang.org/grpc v1.46.0 // indirect
 	google.golang.org/protobuf v1.28.0 // indirect
 )
