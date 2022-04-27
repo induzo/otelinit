@@ -87,3 +87,4 @@ jobs:
           comment-on-alert: true         
           # Push and deploy GitHub pages branch automatically
           auto-push: true 
+          benchmark-data-dir-path: ./
