@@ -69,7 +69,7 @@ jobs:
         run: go test ./... -bench=. -benchmem | tee ./bench.txt
       # Download previous benchmark result from cache (if exists)
       - name: Download previous benchmark data
-        uses: actions/cache@v1
+        uses: actions/cache@v3
         with:
           path: ./cache
           key: ${{ runner.os }}-benchmark
