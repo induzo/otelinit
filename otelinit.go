@@ -17,7 +17,7 @@ func InitProvider(
 		return nil, fmt.Errorf("newProvider() error = %w", err)
 	}
 
-	time.Sleep(1 * time.Millisecond)
+	time.Sleep(10 * time.Millisecond)
 
 	shutdown, err := pvd.init(ctx)
 	if err != nil {
