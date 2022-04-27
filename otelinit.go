@@ -4,7 +4,6 @@ package otelinit
 import (
 	"context"
 	"fmt"
-	"time"
 )
 
 func InitProvider(
@@ -16,8 +15,6 @@ func InitProvider(
 	if err != nil {
 		return nil, fmt.Errorf("newProvider() error = %w", err)
 	}
-
-	time.Sleep(10 * time.Millisecond)
 
 	shutdown, err := pvd.init(ctx)
 	if err != nil {
