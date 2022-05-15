@@ -1,5 +1,5 @@
 [service]
-golangci-lint-version =  "1.45"
+golangci-lint-version =  "1.46"
 
 [linters]
 disable-all = true
