@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [unreleased]
 
+### Bug Fixes
+
+- Hack, because of the global tracer, we cant run the test race
+- Change data dir path
+
 ### Documentation
 
 - Add changelog
@@ -12,10 +17,20 @@ All notable changes to this project will be documented in this file.
 ### Features
 
 - Beautify repo
+- Add bench action
+- Push to github pages
+- Push to github pages
+- Push to github pages
+- Push to github pages
 
 ### Miscellaneous Tasks
 
 - First commit
+- Update deps
+- Test perf bench alert
+- Test bench reg
+- Remove bench slower
+- Upgrade deps
 
 ### Refactor
 
